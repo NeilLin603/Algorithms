@@ -19,7 +19,7 @@ int travel(int maze[][MAZE_SIZE], Point_t start, Point_t end) {
     return travel(maze, up, end) || travel(maze, down, end) || travel(maze, left, end) || travel(maze, right, end);
 }
 
-void printMaze(int maze[][MAZE_SIZE]) {
+void printMaze(const int maze[][MAZE_SIZE]) {
     for (int i = 0; i < MAZE_SIZE; i++) {
         for (int j = 0; j < MAZE_SIZE; j++) {
             if (maze[i][j] == 2) {
