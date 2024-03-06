@@ -10,6 +10,18 @@
 #define CRC_POLYNOMIAL2 0x8408 // 0x1021 reversed: CRC-16-CCITT (SL1 Tx / SL2 Rx)
 
 #if defined(__TMS320C2000__)
+static uint16_t crcRem(const void *base, size_t wordSize, uint16_t poly) {
+    uint16_t rem = *(uint16_t *)base, wordCount = 0, bitCount, next;
+    while (++wordCount < wordSize) {
+        next = *((uint16_t *)base + wordCount);
+        for (bitCount = 0; bitCount < 16; bitCount++) {
+            rem = (rem >> 1 | (next & 1) << 15) ^ (rem & 1 ? poly : 0);
+            next >>= 1;
+        }
+    }
+    return rem;
+}
+
 /**
  * \brief 16-bit CRC encoder.
  * \param base Pointer to the base address of data to be encoded.
@@ -18,14 +30,7 @@
  * \return 16-bit CRC.
  */
 uint16_t encodeCRC16(const void *base, size_t wordSize, uint16_t poly) {
-    uint16_t crc = *(uint16_t *)base, wordCount = 0, bitCount, next;
-    while (++wordCount < wordSize) {
-        next = *((uint16_t *)base + wordCount);
-        for (bitCount = 0; bitCount < 16; bitCount++) {
-            crc = (crc >> 1 | (next & 1) << 15) ^ (crc & 1 ? poly : 0);
-            next >>= 1;
-        }
-    }
+    uint16_t crc = crcRem(base, wordSize, poly), bitCount;
     for (bitCount = 0; bitCount < 16; bitCount++) {
         crc = (crc >> 1) ^ (crc & 1 ? poly : 0);
     }
@@ -41,14 +46,7 @@ uint16_t encodeCRC16(const void *base, size_t wordSize, uint16_t poly) {
  * \return 1: check passed, 0: check failed.
  */
 bool decodeCRC16(const void *base, size_t wordSize, uint16_t poly, uint16_t crc) {
-    uint16_t rem = *(uint16_t *)base, wordCount = 0, bitCount, next;
-    while (++wordCount < wordSize) {
-        next = *((uint16_t *)base + wordCount);
-        for (bitCount = 0; bitCount < 16; bitCount++) {
-            rem = (rem >> 1 | (next & 1) << 15) ^ (rem & 1 ? poly : 0);
-            next >>= 1;
-        }
-    }
+    uint16_t rem = crcRem(base, wordSize, poly), bitCount;
     for (bitCount = 0; bitCount < 16; bitCount++) {
         rem = (rem >> 1 | (crc & 1) << 15) ^ (rem & 1 ? poly : 0);
         crc >>= 1;
@@ -66,11 +64,9 @@ bool decodeCRC16(const void *base, size_t wordSize, uint16_t poly, uint16_t crc)
 uint16_t encodeCRC16(const void *base, size_t size, uint16_t poly) {
     uint16_t crc = size > 1 ? *(uint16_t *)base : (uint16_t)*(char *)base;
     uint16_t byteCount = 1, bitCount, next;
-    while (byteCount++ < size + 1)
-    {
+    while (byteCount++ < size + 1) {
         next = byteCount < size ? (uint16_t)*((char *)base + byteCount) : 0;
-        for (bitCount = 0; bitCount < 8; bitCount++)
-        {
+        for (bitCount = 0; bitCount < 8; bitCount++) {
             crc = (crc >> 1 | (next & 1) << 15) ^ (crc & 1 ? poly : 0);
             next >>= 1;
         }
