@@ -43,7 +43,7 @@ uint16_t encodeCRC16(const void *base, size_t wordSize, uint16_t poly) {
  * \param wordSize Data size in words to be encoded.
  * \param poly The CRC polynomial.
  * \param crc CRC value for verification.
- * \return 1: check passed, 0: check failed.
+ * \return true: check passed, false: check failed.
  */
 bool decodeCRC16(const void *base, size_t wordSize, uint16_t poly, uint16_t crc) {
     uint16_t rem = crcRem(base, wordSize, poly), bitCount;
@@ -80,9 +80,9 @@ uint16_t encodeCRC16(const void *base, size_t size, uint16_t poly) {
  * \param size Data size in bytes to be encoded.
  * \param poly The CRC polynomial.
  * \param crc CRC value for verification.
- * \return 1: check passed, 0: check failed.
+ * \return true: check passed, false: check failed.
  */
-int decodeCRC16(const void *base, size_t size, uint16_t poly, uint16_t crc) {
+bool decodeCRC16(const void *base, size_t size, uint16_t poly, uint16_t crc) {
     uint16_t rem = size > 1 ? *(uint16_t *)base : (uint16_t)*(char *)base | (crc & 0xff) << 8;
     uint16_t byteCount = 1, bitCount, next;
     while (byteCount++ < size + 1) {
