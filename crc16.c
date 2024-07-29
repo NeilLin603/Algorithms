@@ -4,7 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define __TMS320C2000__ // C2000 data type
+// C2000 data type
+#ifndef __TMS320C2000__
+#define __TMS320C2000__
+#endif
 
 // CRC polynomial 1 (CRC-16-IBM): reversed from 0x8005 (SL1 Rx / SL2 Tx)
 #define CRC_POLYNOMIAL1 0xA001
@@ -13,7 +16,7 @@
 #define CRC_POLYNOMIAL2 0x8408
 
 #if defined(__TMS320C2000__)
-static uint16_t crcRem(const void *base, size_t wordSize, uint16_t poly)
+static uint16_t crcRem(const void *base, uint16_t wordSize, uint16_t poly)
 {
     uint16_t rem = *(const uint16_t *)base, wordCount = 0, bitCount, next;
     while (++wordCount < wordSize) {
@@ -33,7 +36,7 @@ static uint16_t crcRem(const void *base, size_t wordSize, uint16_t poly)
  * \param poly The CRC polynomial.
  * \return 16-bit CRC.
  */
-uint16_t encodeCRC16(const void *base, size_t wordSize, uint16_t poly)
+uint16_t encodeCRC16(const void *base, uint16_t wordSize, uint16_t poly)
 {
     uint16_t crc = crcRem(base, wordSize, poly), bitCount;
     for (bitCount = 0; bitCount < 16; bitCount++) {
@@ -50,7 +53,7 @@ uint16_t encodeCRC16(const void *base, size_t wordSize, uint16_t poly)
  * \param crc CRC value for verification.
  * \return true: check passed, false: check failed.
  */
-bool decodeCRC16(const void *base, size_t wordSize, uint16_t poly, uint16_t crc)
+bool decodeCRC16(const void *base, uint16_t wordSize, uint16_t poly, uint16_t crc)
 {
     uint16_t rem = crcRem(base, wordSize, poly), bitCount;
     for (bitCount = 0; bitCount < 16; bitCount++) {
@@ -67,7 +70,7 @@ bool decodeCRC16(const void *base, size_t wordSize, uint16_t poly, uint16_t crc)
  * \param poly The CRC polynomial.
  * \return 16-bit CRC.
  */
-uint16_t encodeCRC16(const void *base, size_t size, uint16_t poly)
+uint16_t encodeCRC16(const void *base, uint16_t size, uint16_t poly)
 {
     uint16_t crc = size > 1 ? *(const uint16_t *)base :
                               (uint16_t)*(const char *)base;
@@ -91,7 +94,7 @@ uint16_t encodeCRC16(const void *base, size_t size, uint16_t poly)
  * \param crc CRC value for verification.
  * \return true: check passed, false: check failed.
  */
-bool decodeCRC16(const void *base, size_t size, uint16_t poly, uint16_t crc)
+bool decodeCRC16(const void *base, uint16_t size, uint16_t poly, uint16_t crc)
 {
     uint16_t rem = size > 1 ? *(const uint16_t *)base :
                               (uint16_t)*(const char *)base | (crc & 0xff) << 8;
@@ -117,9 +120,9 @@ int main() {
     uint16_t u16Nums[] = {0x1234, 0x5678, 0x9453, 0x3064}, u16Crc;
     uint8_t *u8Nums = (uint8_t *)malloc(sizeof(u16Nums));
 #if defined(__TMS320C2000__)
-    size_t u16NumsSize = sizeof(u16Nums) / sizeof(uint16_t);
+    uint16_t u16NumsSize = sizeof(u16Nums) / sizeof(uint16_t);
 #else
-    size_t u16NumsSize = sizeof(u16Nums);
+    uint16_t u16NumsSize = sizeof(u16Nums);
 #endif /* __TMS320C2000__ */
 
     // Copy memory from u16Nums to u8Nums
